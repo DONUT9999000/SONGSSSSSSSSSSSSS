@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Code lyric video</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --dusk-top:#0b0e2b; --dusk-bottom:#2a1f55;
+  --amber:#ffe3a3; --pink:#ffb3c7; --sky:#a9d8ff; --lav:#8f93c9; --ink:#fffaf0;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:#0b0e2b;overflow:hidden}
+body{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;color:var(--ink)}
+#stage{position:absolute;inset:0;overflow:hidden;background:linear-gradient(170deg,var(--dusk-top),var(--dusk-bottom))}
+.layer{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+.bokeh{position:absolute;border-radius:50%}
+.glyph{position:absolute;white-space:nowrap;color:var(--lav)}
+.line{position:absolute;transform:translate(-50%,-50%);font-size:44px;line-height:1.35;white-space:pre;
+  text-shadow:0 0 26px rgba(255,227,163,.4);transition:opacity .9s;opacity:1}
+.line.past{opacity:.2}
+.row{display:block;opacity:0;transform:translateX(-26px);filter:blur(6px);
+  transition:opacity .5s,transform .5s,filter .5s;transition-delay:calc(var(--i)*.14s)}
+.line.on .row,.line.past .row{opacity:1;transform:none;filter:none}
+.f{color:var(--amber)} .s{color:var(--pink)} .k{color:var(--sky)} .p{color:var(--lav)} .c{color:var(--lav);opacity:.7;font-style:italic}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 45%,rgba(10,6,24,.65) 100%)}
+#grain{position:absolute;inset:-50%;pointer-events:none;opacity:.14;mix-blend-mode:overlay;animation:grain .6s steps(4) infinite;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>")}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}100%{transform:translate(0,0)}}
+#hud{position:absolute;left:16px;top:calc(14px + env(safe-area-inset-top,0px));display:flex;gap:10px;align-items:center;font-size:14px;pointer-events:none}
+#dot{width:10px;height:10px;border-radius:50%;background:#ff4d5e;animation:blink 1.2s steps(2) infinite}
+@keyframes blink{50%{opacity:0}}
+#overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:rgba(8,10,30,.5);text-align:center;padding:24px;z-index:5}
+#overlay h1{font-size:22px;margin:0 0 4px;font-weight:700}
+#overlay p{margin:0 0 8px;font-size:14px;color:var(--lav);max-width:34ch;line-height:1.5}
+button{font:inherit;color:#0b0e2b;background:var(--amber);border:0;cursor:pointer}
+.big{width:132px;height:132px;border-radius:50%;font-size:52px;padding:0 0 0 10px;box-shadow:0 0 60px 12px rgba(255,227,163,.35)}
+button:focus-visible{outline:2px solid var(--sky);outline-offset:4px}
+.moon,.earth{position:absolute;border-radius:50%;transform:translate(-50%,-50%)}
+.moon{background:radial-gradient(circle at 62% 30%,rgba(160,150,110,.35) 0 7%,transparent 8%),radial-gradient(circle at 30% 62%,rgba(160,150,110,.3) 0 10%,transparent 11%),radial-gradient(circle at 70% 70%,rgba(160,150,110,.28) 0 6%,transparent 7%),radial-gradient(circle at 35% 35%,#fffdf2,#f1e7bd 60%,#cbbf90);box-shadow:0 0 90px 30px rgba(255,240,190,.35)}
+.earth{background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.3),transparent 40%),radial-gradient(circle at 40% 45%,#4f9d5b 0 14%,transparent 15%),radial-gradient(circle at 65% 62%,#4f9d5b 0 11%,transparent 12%),radial-gradient(circle at 55% 25%,#5aa862 0 8%,transparent 9%),radial-gradient(circle at 35% 35%,#4aa3df,#1d5fa8 65%,#0e2f66);box-shadow:inset -30px -30px 60px rgba(0,0,20,.6),0 0 70px 14px rgba(120,190,255,.3)}
+#tent{position:absolute;inset:0;pointer-events:none;background:repeating-conic-gradient(from 0deg at 50% -15%,rgba(150,50,80,.32) 0 7deg,rgba(255,235,210,.05) 7deg 14deg);-webkit-mask-image:linear-gradient(to bottom,#000,transparent 60%);mask-image:linear-gradient(to bottom,#000,transparent 60%)}
+#msg{font-size:13px;color:var(--pink);min-height:1.2em}
+#picker{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:560px}
+#picker button{border:1px solid rgba(255,227,163,.45);border-radius:999px;padding:11px 16px;background:rgba(255,255,255,.08);color:var(--ink);font-size:13px;transition:background .2s,border-color .2s}
+#picker button[aria-pressed="true"]{background:var(--amber);border-color:var(--amber);color:#0b0e2b}
+#picker button:hover{border-color:var(--amber)}
+@media (prefers-reduced-motion:reduce){#grain,#dot{animation:none}}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="layer" id="far"></div>
+  <div class="layer" id="mid"></div>
+  <div class="layer" id="world"></div>
+  <div id="tent"></div>
+  <div id="grain"></div>
+  <div id="vignette"></div>
+  <div id="hud"><span id="dot"></span><span id="tc">00:00</span></div>
+  <div id="overlay">
+    <h1 id="ttl">Choose a song</h1>
+    <p>Pick which lyric journey you want to watch.</p>
+    <div id="picker" aria-label="Choose a song">
+      <button type="button" data-track="love" aria-pressed="true">My Love Mine All Mine</button>
+      <button type="button" data-track="show" aria-pressed="false">Show Me How</button>
+    </div>
+    <button id="play" class="big" aria-label="Play">▶</button>
+    <div id="msg"></div>
+  </div>
+</div>
+<audio id="aud" preload="auto"></audio>
+
+<script>
+const $ = id => document.getElementById(id);
+const stage = $('stage'), world = $('world'), far = $('far'), mid = $('mid');
+const aud = $('aud'), overlay = $('overlay'), msg = $('msg');
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ntfy notifications: change NTFY_TOPIC to your own topic name */
+const NTFY_TOPIC = 'SHAZSONG';
+function notify(title, message, tags){
+  if(NTFY_TOPIC.startsWith('CHANGE-ME')) return;
+  try{
+    fetch('https://ntfy.sh/'+encodeURIComponent(NTFY_TOPIC),{
+      method:'POST',
+      body:message,
+      headers:{'Title':title,'Tags':tags||'bell'},
+      keepalive:true
+    }).catch(()=>{});
+  }catch(e){}
+}
+
+const TRACKS = {
+  love: {
+    title: 'My Love Mine All Mine',
+    audio: 'song.mp3',
+    times: [9.17,12.87,17.15,21.17,26.20,29.74,33.83,37.46,42.04,46.39,50.73,54.53,78.73,82.35,86.38,90.14,94.45,99.06,103.36,107.22,111.90,115.57],
+    lyrics: `moon.reflects("Moon, a hole of light");
+
+it.shines("Through the big top tent up high");
+
+here.exists({ before: "Here, before and after me" });
+
+it.shines("Shinin' down on me");
+
+moon.tell({ me: "Moon, tell me if I could" });
+
+my.heart.send({ up: "Send up my heart to you?" });
+
+when.life.ends({ truth: "So, when I die, which I must do" });
+
+could.you.shine({ "down here": "Could it shine down here with you?" });
+
+it.makes("'Cause my love is mine, all mine");
+
+i.love({ mine: "I love, mine, mine, mine" });
+
+nothing.belongs({ "in the world": "Nothing in the world belongs to me" });
+
+but.my_love.remains("But my love, mine, all mine, all mine");
+
+earth.holds({ "my baby": "My baby here on Earth" });
+
+she.showed({ "my heart": "Showed me what my heart was worth" });
+
+when.my_turn_arrives("So, when it comes to be my turn");
+
+moon.shine({ "for her": "Could you shine it down here for her?" });
+
+it.makes("'Cause my love is mine, all mine");
+
+i.love({ mine: "I love, mine, mine, mine" });
+
+nothing.belongs({ "in the world": "Nothing in the world belongs to me" });
+
+but.my_love.remains("But my love, mine, all mine");
+
+nothing.is_mine({ "for free": "Nothing in the world is mine for free" });
+
+but.my_love.remains("But my love, mine, all mine, all mine");`,
+    decor: [
+      { cls: 'moon', line: 0, dx: 430, dy: -330, size: 300 },
+      { cls: 'moon', line: 4, dx: -450, dy: -320, size: 240 },
+      { cls: 'earth', line: 12, dx: 470, dy: 300, size: 280 },
+      { cls: 'earth', line: 18, dx: -470, dy: -300, size: 220 }
+    ]
+  },
+  show: {
+    title: 'Show Me How',
+    audio: 'show-me-how.mp3',
+    times: [25.96,37.59,49.09,60.68,71.59,73.74,79.09,83.52,89.63,92.91,106.94,118.52,129.35,140.95,152.55,154.68,160.07,164.45,171.40,178.88,185.35],
+    lyrics: `you.show({ me: "Show me how you care" });
+
+tell.me({ how: "Tell me how you loved before" });
+
+you.show({ me: "Show me how you smile" });
+
+tell.me({ why: "Tell me why your hands are cold" });
+
+i.turn({ around: "I'm turning around" });
+
+i.have({ visions: "I'm having visions of you" });
+
+then.i.understand("Then I understand");
+
+the.friend.i.dream({ of: "The friend I'm dreaming of is far away" });
+
+but.i.am({ here: "But I'm here" });
+
+i.remain("I'm here");
+
+you.show({ me: "Show me how you're proud" });
+
+tell.me({ how: "Tell me how you reach the moon" });
+
+my.thoughts.drift({ away: "My thoughts err away tonight" });
+
+my.heart.fell({ to: "My heart fell to love again" });
+
+i.turn({ around: "I'm turning around" });
+
+i.have({ visions: "I'm having visions of you" });
+
+then.i.understand("Then I understand");
+
+the.friend.i.dream({ of: "The friend I'm dreaming of is far away" });
+
+and.you.do_not({ feel: "And doesn't feel my love" });
+
+but.i.do("But I do");
+
+i.do({ still: "I do" });`,
+    decor: [
+      { cls: 'moon', line: 13, dx: 470, dy: -300, size: 280 },
+      { cls: 'earth', line: 19, dx: -470, dy: 280, size: 240 }
+    ]
+  }
+};
+
+const POSITIONS = [
+  [0,0,1.0,-1.5],[1100,-250,1.1,1.2],[2200,200,.95,-.8],[3300,-100,1.2,1.5],
+  [4400,150,1.0,-1.2],[5500,-300,1.15,1.0],[6600,100,.9,-1.6],[7700,-200,1.2,1.3],
+  [8800,250,1.05,-.7],[9900,-150,1.15,1.4],[11000,180,.95,-1.1],[12100,-250,1.25,.9],
+  [13200,100,1.0,-1.4],[14300,-200,1.1,1.2],[15400,220,.9,-.9],[16500,-120,1.2,1.6],
+  [17600,160,1.05,-1.0],[18700,-260,1.15,1.1],[19800,120,.95,-1.5],[20900,-180,1.2,1.3],
+  [22000,240,1.0,-.8],[23100,-100,1.1,1.0],[24200,180,1.0,-.6]
+];
+
+let selected = 'love', SONG = [], lineEls = [], START, endAt = 0;
+let hasSong = false, useAudio = false, t0 = 0, running = false;
+const TRAVEL = 1.2, END_PAD = 8;
+const now = () => useAudio ? aud.currentTime : (performance.now()-t0)/1000;
+const fmt = t => String(Math.floor(t/60)).padStart(2,'0')+':'+String(Math.floor(t%60)).padStart(2,'0');
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const RX = /(\/\/.*)|("[^"]*")|([A-Za-z_]\w*)(?=\s*\()|([A-Za-z_]\w*)(?=\s*:)|([{}()\[\];,.:=])/g;
+const hl = s => esc(s).replace(RX,(m,c,str,fn,key,p)=>
+  c?`<span class="c">${c}</span>`: str?`<span class="s">${str}</span>`:
+  fn?`<span class="f">${fn}</span>`: key?`<span class="k">${key}</span>`: `<span class="p">${p}</span>`);
+
+/* Build the drifting background once; both tracks use the same visual world. */
+let seed=7; const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+function fill(layer,k,count,make){
+  const x0=-1400, x1=27000, y0=-1800, y1=1800;
+  for(let i=0,n=Math.round(count*((x1-x0)/3500));i<n;i++) layer.appendChild(make(x0+rnd()*(x1-x0),y0+rnd()*(y1-y0)));
+}
+const cols=['255,227,163','255,179,199','169,216,255','190,170,255'];
+fill(far,.25,34,(x,y)=>{const e=document.createElement('div');e.className='bokeh';const s=90+rnd()*220,c=cols[Math.floor(rnd()*4)];Object.assign(e.style,{left:x+'px',top:y+'px',width:s+'px',height:s+'px',background:`radial-gradient(circle,rgba(${c},${.22+rnd()*.25}) 0%,rgba(${c},0) 70%)`});return e;});
+const G=['{ }','=>','();','</>','[ ]','0x','&&','::','//','fn'];
+fill(mid,.55,70,(x,y)=>{const e=document.createElement('div');e.className='glyph';e.textContent=G[Math.floor(rnd()*G.length)];Object.assign(e.style,{left:x+'px',top:y+'px',fontSize:(20+rnd()*34)+'px',opacity:.07+rnd()*.1});return e;});
+
+const ease=p=>p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+const clamp=(v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,p)=>a+(b-a)*p;
+function camAt(t){
+  let i=-1; SONG.forEach((l,n)=>{if(t>=l.at-TRAVEL)i=n;});
+  if(i<0)return START;
+  const from=i===0?START:SONG[i-1],to=SONG[i],p=ease(clamp((t-(to.at-TRAVEL))/TRAVEL));
+  return {x:lerp(from.x,to.x,p),y:lerp(from.y,to.y,p),z:lerp(from.z,to.z,p),r:lerp(from.r,to.r,p)};
+}
+function place(el,c,k,t,shake){
+  const W=stage.clientWidth,H=stage.clientHeight,fit=clamp(W/1100,.55,1);
+  const sx=shake?Math.sin(t*1.3)*6+Math.sin(t*2.9)*3:0,sy=shake?Math.sin(t*1.7+1)*5+Math.sin(t*3.3)*2:0,sr=shake?Math.sin(t*.9)*.35:0;
+  el.style.transform=`translate(${W/2+sx*k}px,${H/2+sy*k}px) rotate(${(c.r+sr)*(k===1?1:k)}deg) scale(${Math.pow(c.z*fit,k===1?1:k)}) translate(${-c.x*k}px,${-c.y*k}px)`;
+}
+
+function buildTrack(key){
+  selected=key;
+  const track=TRACKS[key];
+  aud.pause();
+  aud.src=track.audio;
+  hasSong=true;
+  msg.textContent='';
+  $('ttl').textContent=track.title;
+  $('play').textContent='▶';
+  $('picker').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.track===key)));
+  const parts=track.lyrics.trim().split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  SONG=track.times.map((at,i)=>{const p=POSITIONS[i];return {at,x:p[0],y:p[1],z:p[2],r:p[3],code:parts[i]||''};});
+  world.innerHTML='';
+  track.decor.forEach(d=>{const l=SONG[d.line];if(!l)return;const e=document.createElement('div');e.className=d.cls;Object.assign(e.style,{left:(l.x+d.dx)+'px',top:(l.y+d.dy)+'px',width:d.size+'px',height:d.size+'px'});world.appendChild(e);});
+  lineEls=SONG.map(l=>{const d=document.createElement('div');d.className='line';d.style.left=l.x+'px';d.style.top=l.y+'px';d.innerHTML=l.code.split('\n').map((r,i)=>`<span class="row" style="--i:${i}">${hl(r)||'&nbsp;'}</span>`).join('');d.style.opacity=0;world.appendChild(d);return d;});
+  const first=SONG[0];
+  START={x:first.x-700,y:first.y+120,z:first.z*.9,r:first.r-3};
+  endAt=SONG[SONG.length-1].at+END_PAD;
+  place(world,START,1,0,false);place(mid,START,.55,0,false);place(far,START,.25,0,false);
+}
+
+function frame(){
+  if(!running)return;
+  const t=now(),c=camAt(t);
+  place(world,c,1,t,!reduce);place(mid,c,.55,t,!reduce);place(far,c,.25,t,!reduce);
+  SONG.forEach((l,i)=>{const el=lineEls[i],next=SONG[i+1],on=t>=l.at,past=next&&t>=next.at;el.style.opacity='';el.classList.toggle('on',on&&!past);el.classList.toggle('past',!!past);});
+  $('tc').textContent=fmt(t);
+  if(t>endAt){finish();return;}
+  requestAnimationFrame(frame);
+}
+function start(){
+  lineEls.forEach(e=>{e.className='line';e.style.opacity=0;});
+  running=true;useAudio=false;t0=performance.now();msg.textContent='';
+  aud.currentTime=0;
+  aud.play().then(()=>{useAudio=true;}).catch(()=>{msg.textContent='Could not play '+TRACKS[selected].audio+'; using the timer instead.';});
+  $('picker').style.display='none';
+  overlay.style.display='none';
+  requestAnimationFrame(frame);
+}
+function finish(){
+  running=false;aud.pause();
+  notify('Song finished','They finished: '+TRACKS[selected].title,'tada');
+  $('ttl').textContent=TRACKS[selected].title+' — finished';
+  $('play').textContent='↺';
+  $('picker').style.display='flex';
+  overlay.style.display='flex';
+  msg.textContent='Choose either song to play again.';
+}
+$('picker').addEventListener('click',e=>{const b=e.target.closest('button[data-track]');if(b){buildTrack(b.dataset.track);msg.textContent='Selected: '+TRACKS[selected].title;notify('Song chosen','They picked: '+TRACKS[selected].title,'musical_note');}});
+$('play').onclick=start;
+$('aud').addEventListener('error',()=>{hasSong=false;msg.textContent='Place '+TRACKS[selected].audio+' in the same folder as this HTML file.';});
+buildTrack('love');
+notify('Website opened','Someone just opened the lyric video page','eyes');
+$('picker').style.display='flex';
+$('msg').textContent='Choose a song, then press play.';
+addEventListener('resize',()=>{if(!running&&START){place(world,START,1,0,false);place(mid,START,.55,0,false);place(far,START,.25,0,false);}});
+
+</script>
+</body>
+</html>
